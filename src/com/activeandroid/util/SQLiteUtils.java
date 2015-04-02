@@ -336,11 +336,7 @@ public final class SQLiteUtils {
                  */
                 List<String> columnsOrdered = new ArrayList<String>(Arrays.asList(cursor.getColumnNames()));
 				do {
-					Model entity = Cache.getEntity(type, cursor.getLong(columnsOrdered.indexOf(idName)));
-					if (entity == null) {
-						entity = (T) entityConstructor.newInstance();
-					}
-
+					Model entity = (T) entityConstructor.newInstance();
 					entity.loadFromCursor(cursor);
 					entities.add((T) entity);
 				}
