@@ -179,6 +179,13 @@ public abstract class Model {
 		return (T) new Select().from(type).where(tableInfo.getIdName()+"=?", id).executeSingle();
 	}
 
+    public static void truncate(Class<? extends Model> type){
+        TableInfo tableInfo = Cache.getTableInfo(type);
+        // Not the cleanest way, but...
+        ActiveAndroid.execSQL("delete from "+tableInfo.getTableName()+";");
+        ActiveAndroid.execSQL("delete from sqlite_sequence where name='"+tableInfo.getTableName()+"';");
+    }
+
 	// Model population
 
 	public final void loadFromCursor(Cursor cursor) {
