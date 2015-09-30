@@ -327,7 +327,7 @@ public final class SQLiteUtils {
 		final List<T> entities = new ArrayList<T>();
 
 		try {
-			Constructor<?> entityConstructor = type.getConstructor();
+			Constructor<?> entityConstructor = type.getConstructor(Cache.class);
 
 			if (cursor.moveToFirst()) {
                 /**
@@ -336,7 +336,7 @@ public final class SQLiteUtils {
                  */
                 List<String> columnsOrdered = new ArrayList<String>(Arrays.asList(cursor.getColumnNames()));
 				do {
-					Model entity = (T) entityConstructor.newInstance();
+					Model entity = (T) entityConstructor.newInstance(cache);
 					entity.loadFromCursor(cursor);
 					entities.add((T) entity);
 				}
