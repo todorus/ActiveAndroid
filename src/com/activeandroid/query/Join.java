@@ -18,6 +18,7 @@ package com.activeandroid.query;
 
 import android.text.TextUtils;
 
+import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Cache;
 import com.activeandroid.Model;
 
@@ -69,7 +70,7 @@ public final class Join implements Sqlable {
 		}
 
 		sql.append("JOIN ");
-		sql.append(Cache.getTableName(mType));
+		sql.append(ActiveAndroid.getCache().getTableName(mType));
 		sql.append(" ");
 
 		if (mAlias != null) {

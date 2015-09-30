@@ -39,7 +39,7 @@ public class ContentProvider extends android.content.ContentProvider {
 		ActiveAndroid.initialize(getConfiguration());
 		sAuthority = getAuthority();
 
-		final List<TableInfo> tableInfos = new ArrayList<TableInfo>(Cache.getTableInfos());
+		final List<TableInfo> tableInfos = new ArrayList<TableInfo>(ActiveAndroid.getCache().getTableInfos());
 		final int size = tableInfos.size();
 		for (int i = 0; i < size; i++) {
 			final TableInfo tableInfo = tableInfos.get(i);
@@ -81,7 +81,7 @@ public class ContentProvider extends android.content.ContentProvider {
 		mimeType.append(".");
 		mimeType.append(sAuthority);
 		mimeType.append(".");
-		mimeType.append(Cache.getTableName(type));
+		mimeType.append(ActiveAndroid.getCache().getTableName(type));
 
 		sMimeTypeCache.append(match, mimeType.toString());
 
@@ -93,7 +93,7 @@ public class ContentProvider extends android.content.ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		final Class<? extends Model> type = getModelType(uri);
-		final Long id = Cache.openDatabase().insert(Cache.getTableName(type), null, values);
+		final Long id = ActiveAndroid.getCache().openDatabase().insert(ActiveAndroid.getCache().getTableName(type), null, values);
 
 		if (id != null && id > 0) {
 			Uri retUri = createUri(type, id);
@@ -108,7 +108,7 @@ public class ContentProvider extends android.content.ContentProvider {
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		final Class<? extends Model> type = getModelType(uri);
-		final int count = Cache.openDatabase().update(Cache.getTableName(type), values, selection, selectionArgs);
+		final int count = ActiveAndroid.getCache().openDatabase().update(ActiveAndroid.getCache().getTableName(type), values, selection, selectionArgs);
 
 		notifyChange(uri);
 
@@ -118,7 +118,7 @@ public class ContentProvider extends android.content.ContentProvider {
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		final Class<? extends Model> type = getModelType(uri);
-		final int count = Cache.openDatabase().delete(Cache.getTableName(type), selection, selectionArgs);
+		final int count = ActiveAndroid.getCache().openDatabase().delete(ActiveAndroid.getCache().getTableName(type), selection, selectionArgs);
 
 		notifyChange(uri);
 
@@ -128,8 +128,8 @@ public class ContentProvider extends android.content.ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		final Class<? extends Model> type = getModelType(uri);
-		final Cursor cursor = Cache.openDatabase().query(
-				Cache.getTableName(type),
+		final Cursor cursor = ActiveAndroid.getCache().openDatabase().query(
+				ActiveAndroid.getCache().getTableName(type),
 				projection,
 				selection,
 				selectionArgs,
@@ -151,7 +151,7 @@ public class ContentProvider extends android.content.ContentProvider {
 		uri.append("content://");
 		uri.append(sAuthority);
 		uri.append("/");
-		uri.append(Cache.getTableName(type).toLowerCase());
+		uri.append(ActiveAndroid.getCache().getTableName(type).toLowerCase());
 
 		if (id != null) {
 			uri.append("/");

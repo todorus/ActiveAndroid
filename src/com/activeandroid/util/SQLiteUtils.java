@@ -94,32 +94,32 @@ public final class SQLiteUtils {
 	// PUBLIC METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	public static void execSql(String sql) {
-		Cache.openDatabase().execSQL(sql);
+	public static void execSql(Cache cache, String sql) {
+		cache.openDatabase().execSQL(sql);
 	}
 
-	public static void execSql(String sql, Object[] bindArgs) {
-		Cache.openDatabase().execSQL(sql, bindArgs);
+	public static void execSql(Cache cache, String sql, Object[] bindArgs) {
+		cache.openDatabase().execSQL(sql, bindArgs);
 	}
 
-	public static <T extends Model> List<T> rawQuery(Class<? extends Model> type, String sql, String[] selectionArgs) {
-		Cursor cursor = Cache.openDatabase().rawQuery(sql, selectionArgs);
-		List<T> entities = processCursor(type, cursor);
+	public static <T extends Model> List<T> rawQuery(Cache cache, Class<? extends Model> type, String sql, String[] selectionArgs) {
+		Cursor cursor = cache.openDatabase().rawQuery(sql, selectionArgs);
+		List<T> entities = processCursor(cache, type, cursor);
 		cursor.close();
 
 		return entities;
 	}
 	  
-	public static int intQuery(final String sql, final String[] selectionArgs) {
-        final Cursor cursor = Cache.openDatabase().rawQuery(sql, selectionArgs);
+	public static int intQuery(Cache cache, final String sql, final String[] selectionArgs) {
+        final Cursor cursor = cache.openDatabase().rawQuery(sql, selectionArgs);
         final int number = processIntCursor(cursor);
         cursor.close();
 
         return number;
 	}
 
-	public static <T extends Model> T rawQuerySingle(Class<? extends Model> type, String sql, String[] selectionArgs) {
-		List<T> entities = rawQuery(type, sql, selectionArgs);
+	public static <T extends Model> T rawQuerySingle(Cache cache, Class<? extends Model> type, String sql, String[] selectionArgs) {
+		List<T> entities = rawQuery(cache, type, sql, selectionArgs);
 
 		if (entities.size() > 0) {
 			return entities.get(0);
@@ -236,11 +236,11 @@ public final class SQLiteUtils {
 		}
 	}
 
-	public static String createTableDefinition(TableInfo tableInfo) {
+	public static String createTableDefinition(Cache cache, TableInfo tableInfo) {
 		final ArrayList<String> definitions = new ArrayList<String>();
 
 		for (Field field : tableInfo.getFields()) {
-			String definition = createColumnDefinition(tableInfo, field);
+			String definition = createColumnDefinition(cache, tableInfo, field);
 			if (!TextUtils.isEmpty(definition)) {
 				definitions.add(definition);
 			}
@@ -253,12 +253,12 @@ public final class SQLiteUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static String createColumnDefinition(TableInfo tableInfo, Field field) {
+	public static String createColumnDefinition(Cache cache, TableInfo tableInfo, Field field) {
 		StringBuilder definition = new StringBuilder();
 
 		Class<?> type = field.getType();
 		final String name = tableInfo.getColumnName(field);
-		final TypeSerializer typeSerializer = Cache.getParserForType(field.getType());
+		final TypeSerializer typeSerializer = cache.getParserForType(field.getType());
 		final Column column = field.getAnnotation(Column.class);
 
 		if (typeSerializer != null) {
@@ -305,7 +305,7 @@ public final class SQLiteUtils {
 
 			if (FOREIGN_KEYS_SUPPORTED && ReflectionUtils.isModel(type)) {
 				definition.append(" REFERENCES ");
-				definition.append(Cache.getTableInfo((Class<? extends Model>) type).getTableName());
+				definition.append(cache.getTableInfo((Class<? extends Model>) type).getTableName());
 				definition.append("("+tableInfo.getIdName()+")");
 				definition.append(" ON DELETE ");
 				definition.append(column.onDelete().toString().replace("_", " "));
@@ -321,8 +321,8 @@ public final class SQLiteUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends Model> List<T> processCursor(Class<? extends Model> type, Cursor cursor) {
-		TableInfo tableInfo = Cache.getTableInfo(type);
+	public static <T extends Model> List<T> processCursor(Cache cache, Class<? extends Model> type, Cursor cursor) {
+		TableInfo tableInfo = cache.getTableInfo(type);
 		String idName = tableInfo.getIdName();
 		final List<T> entities = new ArrayList<T>();
 

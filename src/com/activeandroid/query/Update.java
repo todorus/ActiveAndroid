@@ -16,6 +16,7 @@ package com.activeandroid.query;
  * limitations under the License.
  */
 
+import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Cache;
 import com.activeandroid.Model;
 
@@ -42,7 +43,7 @@ public final class Update implements Sqlable {
 	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append("UPDATE ");
-		sql.append(Cache.getTableName(mType));
+		sql.append(ActiveAndroid.getCache().getTableName(mType));
 		sql.append(" ");
 
 		return sql.toString();

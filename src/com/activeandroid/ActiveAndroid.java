@@ -22,6 +22,9 @@ import android.database.sqlite.SQLiteDatabase;
 import com.activeandroid.util.Log;
 
 public final class ActiveAndroid {
+
+	private static Cache cache;
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// PUBLIC METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -41,15 +44,19 @@ public final class ActiveAndroid {
 	public static void initialize(Configuration configuration, boolean loggingEnabled) {
 		// Set logging enabled first
 		setLoggingEnabled(loggingEnabled);
-		Cache.initialize(configuration);
+		cache = new Cache(configuration);
+	}
+
+	public static Cache getCache(){
+		return cache;
 	}
 
 	public static void clearCache() {
-		Cache.clear();
+		cache.clear();
 	}
 
 	public static void dispose() {
-		Cache.dispose();
+		cache.dispose();
 	}
 
 	public static void setLoggingEnabled(boolean enabled) {
@@ -57,30 +64,30 @@ public final class ActiveAndroid {
 	}
 
 	public static SQLiteDatabase getDatabase() {
-		return Cache.openDatabase();
+		return cache.openDatabase();
 	}
 
 	public static void beginTransaction() {
-		Cache.openDatabase().beginTransaction();
+		cache.openDatabase().beginTransaction();
 	}
 
 	public static void endTransaction() {
-		Cache.openDatabase().endTransaction();
+		cache.openDatabase().endTransaction();
 	}
 
 	public static void setTransactionSuccessful() {
-		Cache.openDatabase().setTransactionSuccessful();
+		cache.openDatabase().setTransactionSuccessful();
 	}
 
 	public static boolean inTransaction() {
-		return Cache.openDatabase().inTransaction();
+		return cache.openDatabase().inTransaction();
 	}
 
 	public static void execSQL(String sql) {
-		Cache.openDatabase().execSQL(sql);
+		cache.openDatabase().execSQL(sql);
 	}
 
 	public static void execSQL(String sql, Object[] bindArgs) {
-		Cache.openDatabase().execSQL(sql, bindArgs);
+		cache.openDatabase().execSQL(sql, bindArgs);
 	}
 }

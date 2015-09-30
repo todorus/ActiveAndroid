@@ -16,6 +16,7 @@ package com.activeandroid.query;
  * limitations under the License.
  */
 
+import com.activeandroid.ActiveAndroid;
 import com.activeandroid.util.SQLiteUtils;
 
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ public final class Set implements Sqlable {
 	}
 
 	public void execute() {
-		SQLiteUtils.execSql(toSql(), getArguments());
+		SQLiteUtils.execSql(ActiveAndroid.getCache(), toSql(), getArguments());
 	}
 
 	public String[] getArguments() {

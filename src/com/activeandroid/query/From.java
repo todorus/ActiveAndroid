@@ -18,6 +18,7 @@ package com.activeandroid.query;
 
 import android.text.TextUtils;
 
+import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Cache;
 import com.activeandroid.Model;
 import com.activeandroid.content.ContentProvider;
@@ -166,7 +167,7 @@ public final class From implements Sqlable {
 
     private void addFrom(final StringBuilder sql) {
         sql.append("FROM ");
-        sql.append(Cache.getTableName(mType)).append(" ");
+        sql.append(ActiveAndroid.getCache().getTableName(mType)).append(" ");
 
         if (mAlias != null) {
             sql.append("AS ");
@@ -295,11 +296,11 @@ public final class From implements Sqlable {
 
 	public <T extends Model> List<T> execute() {
 		if (mQueryBase instanceof Select) {
-			return SQLiteUtils.rawQuery(mType, toSql(), getArguments());
+			return SQLiteUtils.rawQuery(ActiveAndroid.getCache(), mType, toSql(), getArguments());
 			
 		} else {
-			SQLiteUtils.execSql(toSql(), getArguments());
-			Cache.getContext().getContentResolver().notifyChange(ContentProvider.createUri(mType, null), null);
+			SQLiteUtils.execSql(ActiveAndroid.getCache(), toSql(), getArguments());
+            ActiveAndroid.getCache().getContext().getContentResolver().notifyChange(ContentProvider.createUri(mType, null), null);
 			return null;
 			
 		}
@@ -308,11 +309,11 @@ public final class From implements Sqlable {
 	public <T extends Model> T executeSingle() {
 		if (mQueryBase instanceof Select) {
 			limit(1);
-			return (T) SQLiteUtils.rawQuerySingle(mType, toSql(), getArguments());
+			return (T) SQLiteUtils.rawQuerySingle(ActiveAndroid.getCache(), mType, toSql(), getArguments());
 			
 		} else {
 			limit(1);
-			SQLiteUtils.rawQuerySingle(mType, toSql(), getArguments()).delete();
+			SQLiteUtils.rawQuerySingle(ActiveAndroid.getCache(), mType, toSql(), getArguments()).delete();
 			return null;
 			
 		}
@@ -323,14 +324,14 @@ public final class From implements Sqlable {
      * @return <code>true</code> if the query returns at least one row; otherwise, <code>false</code>.
      */
     public boolean exists() {
-        return SQLiteUtils.intQuery(toExistsSql(), getArguments()) != 0;
+        return SQLiteUtils.intQuery(ActiveAndroid.getCache(), toExistsSql(), getArguments()) != 0;
     }
 
     /**
      * Gets the number of rows returned by the query.
      */
     public int count() {
-        return SQLiteUtils.intQuery(toCountSql(), getArguments());
+        return SQLiteUtils.intQuery(ActiveAndroid.getCache(), toCountSql(), getArguments());
     }
 
 	public String[] getArguments() {
