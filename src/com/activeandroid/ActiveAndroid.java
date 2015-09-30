@@ -53,10 +53,18 @@ public final class ActiveAndroid {
 	}
 
 	public static void clearCache() {
+		clearCache(cache);
+	}
+
+	public static void clearCache(Cache cache) {
 		cache.clear();
 	}
 
 	public static void dispose() {
+		dispose(cache);
+	}
+
+	public static void dispose(Cache cache) {
 		cache.dispose();
 	}
 
@@ -65,30 +73,58 @@ public final class ActiveAndroid {
 	}
 
 	public static SQLiteDatabase getDatabase() {
+		return getDatabase(cache);
+	}
+
+	public static SQLiteDatabase getDatabase(Cache cache) {
 		return cache.openDatabase();
 	}
 
 	public static void beginTransaction() {
+		beginTransaction(cache);
+	}
+
+	public static void beginTransaction(Cache cache) {
 		cache.openDatabase().beginTransaction();
 	}
 
 	public static void endTransaction() {
+		endTransaction(cache);
+	}
+
+	public static void endTransaction(Cache cache) {
 		cache.openDatabase().endTransaction();
 	}
 
 	public static void setTransactionSuccessful() {
+		setTransactionSuccessful(cache);
+	}
+
+	public static void setTransactionSuccessful(Cache cache) {
 		cache.openDatabase().setTransactionSuccessful();
 	}
 
 	public static boolean inTransaction() {
+		return inTransaction(cache);
+	}
+
+	public static boolean inTransaction(Cache cache) {
 		return cache.openDatabase().inTransaction();
 	}
 
 	public static void execSQL(String sql) {
+		execSQL(cache, sql);
+	}
+
+	public static void execSQL(Cache cache, String sql) {
 		cache.openDatabase().execSQL(sql);
 	}
 
 	public static void execSQL(String sql, Object[] bindArgs) {
+		execSQL(cache, sql, bindArgs);
+	}
+
+	public static void execSQL(Cache cache, String sql, Object[] bindArgs) {
 		cache.openDatabase().execSQL(sql, bindArgs);
 	}
 }
