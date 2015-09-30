@@ -27,6 +27,7 @@ public final class Join implements Sqlable {
 		LEFT, OUTER, INNER, CROSS
 	}
 
+	private Cache mCache;
 	private From mFrom;
 	private Class<? extends Model> mType;
 	private String mAlias;
@@ -35,6 +36,11 @@ public final class Join implements Sqlable {
 	private String[] mUsing;
 
 	Join(From from, Class<? extends Model> table, JoinType joinType) {
+		this(ActiveAndroid.getCache(), from, table, joinType);
+	}
+
+	Join(Cache cache, From from, Class<? extends Model> table, JoinType joinType) {
+		mCache = cache;
 		mFrom = from;
 		mType = table;
 		mJoinType = joinType;
@@ -70,7 +76,7 @@ public final class Join implements Sqlable {
 		}
 
 		sql.append("JOIN ");
-		sql.append(ActiveAndroid.getCache().getTableName(mType));
+		sql.append(mCache.getTableName(mType));
 		sql.append(" ");
 
 		if (mAlias != null) {

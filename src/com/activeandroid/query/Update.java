@@ -21,18 +21,24 @@ import com.activeandroid.Cache;
 import com.activeandroid.Model;
 
 public final class Update implements Sqlable {
+	private Cache mCache;
 	private Class<? extends Model> mType;
 
-	public Update(Class<? extends Model> table) {
+	public Update(Class<? extends Model> table){
+		this(ActiveAndroid.getCache(), table);
+	}
+
+	public Update(Cache cache, Class<? extends Model> table) {
+		mCache = cache;
 		mType = table;
 	}
 
 	public Set set(String set) {
-		return new Set(this, set);
+		return new Set(mCache, this, set);
 	}
 
 	public Set set(String set, Object... args) {
-		return new Set(this, set, args);
+		return new Set(mCache, this, set, args);
 	}
 
 	Class<? extends Model> getType() {
@@ -43,7 +49,7 @@ public final class Update implements Sqlable {
 	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append("UPDATE ");
-		sql.append(ActiveAndroid.getCache().getTableName(mType));
+		sql.append(mCache.getTableName(mType));
 		sql.append(" ");
 
 		return sql.toString();

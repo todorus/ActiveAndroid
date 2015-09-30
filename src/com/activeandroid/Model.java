@@ -44,11 +44,18 @@ public abstract class Model {
 
 	private Long mId = null;
 
+	private Cache mCache;
 	private final TableInfo mTableInfo;
 	private final String idName;
 	//////////////////////////////////////////////////////////////////////////////////////
 	// CONSTRUCTORS
 	//////////////////////////////////////////////////////////////////////////////////////
+
+	public Model(Cache cache) {
+		mCache = cache;
+		mTableInfo = getCache().getTableInfo(getClass());
+		idName = mTableInfo.getIdName();
+	}
 
 	public Model() {
 		mTableInfo = getCache().getTableInfo(getClass());
@@ -172,17 +179,29 @@ public abstract class Model {
 	// Convenience methods
 
 	public static void delete(Class<? extends Model> type, long id) {
-		TableInfo tableInfo = getCache().getTableInfo(type);
-		new Delete().from(type).where(tableInfo.getIdName()+"=?", id).execute();
+		delete(ActiveAndroid.getCache(), type, id);
+	}
+
+	public static void delete(Cache cache, Class<? extends Model> type, long id) {
+		TableInfo tableInfo = cache.getTableInfo(type);
+		new Delete(cache).from(type).where(tableInfo.getIdName() + "=?", id).execute();
 	}
 
 	public static <T extends Model> T load(Class<T> type, long id) {
-		TableInfo tableInfo = getCache().getTableInfo(type);
+		return load(ActiveAndroid.getCache(), type, id);
+	}
+
+	public static <T extends Model> T load(Cache cache, Class<T> type, long id) {
+		TableInfo tableInfo = cache.getTableInfo(type);
 		return (T) new Select().from(type).where(tableInfo.getIdName()+"=?", id).executeSingle();
 	}
 
-    public static void truncate(Class<? extends Model> type){
-        TableInfo tableInfo = getCache().getTableInfo(type);
+	public static void truncate(Class<? extends Model> type){
+		truncate(ActiveAndroid.getCache(), type);
+	}
+
+    public static void truncate(Cache cache, Class<? extends Model> type){
+        TableInfo tableInfo = cache.getTableInfo(type);
         // Not the cleanest way, but...
         ActiveAndroid.execSQL("delete from "+tableInfo.getTableName()+";");
         ActiveAndroid.execSQL("delete from sqlite_sequence where name='"+tableInfo.getTableName()+"';");
@@ -310,8 +329,12 @@ public abstract class Model {
 	// PRIVATE METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	private static Cache getCache(){
-		return ActiveAndroid.getCache();
+	private Cache getCache(){
+		if(mCache == null) {
+			return ActiveAndroid.getCache();
+		} else {
+			return mCache;
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
