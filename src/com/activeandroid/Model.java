@@ -44,7 +44,7 @@ public abstract class Model {
 
 	private Long mId = null;
 
-	private Cache mCache;
+	protected Cache mCache;
 	private final TableInfo mTableInfo;
 	private final String idName;
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -329,7 +329,7 @@ public abstract class Model {
 	// PRIVATE METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	private Cache getCache(){
+	public Cache getCache(){
 		if(mCache == null) {
 			return ActiveAndroid.getCache();
 		} else {
