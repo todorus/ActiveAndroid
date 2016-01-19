@@ -347,15 +347,15 @@ public abstract class Model {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Model && this.mId != null) {
-			final Model other = (Model) obj;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
-			return this.mId.equals(other.mId)							
-							&& (this.mTableInfo.getTableName().equals(other.mTableInfo.getTableName()));
-		} else {
-			return this == obj;
-		}
+		Model model = (Model) o;
+
+		if (mId != null ? !mId.equals(model.mId) : model.mId != null) return false;
+		return mTableInfo.getTableName().equals(model.mTableInfo.getTableName());
+
 	}
 
 	@Override
