@@ -18,6 +18,7 @@ package com.activeandroid.query;
 
 import android.text.TextUtils;
 
+import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Cache;
 import com.activeandroid.Model;
 import com.activeandroid.content.ContentProvider;
@@ -31,6 +32,7 @@ import java.util.List;
 public final class From implements Sqlable {
 	private Sqlable mQueryBase;
 
+    private Cache mCache;
 	private Class<? extends Model> mType;
 	private String mAlias;
 	private List<Join> mJoins;
@@ -43,7 +45,12 @@ public final class From implements Sqlable {
 
 	private List<Object> mArguments;
 
-	public From(Class<? extends Model> table, Sqlable queryBase) {
+    public From(Class<? extends Model> table, Sqlable queryBase) {
+        this(ActiveAndroid.getCache(), table, queryBase);
+    }
+
+	public From(Cache cache, Class<? extends Model> table, Sqlable queryBase) {
+        mCache = cache;
 		mType = table;
 		mJoins = new ArrayList<Join>();
 		mQueryBase = queryBase;
@@ -58,31 +65,31 @@ public final class From implements Sqlable {
 	}
 
 	public Join join(Class<? extends Model> table) {
-		Join join = new Join(this, table, null);
+		Join join = new Join(mCache, this, table, null);
 		mJoins.add(join);
 		return join;
 	}
 
 	public Join leftJoin(Class<? extends Model> table) {
-		Join join = new Join(this, table, JoinType.LEFT);
+		Join join = new Join(mCache, this, table, JoinType.LEFT);
 		mJoins.add(join);
 		return join;
 	}
 
 	public Join outerJoin(Class<? extends Model> table) {
-		Join join = new Join(this, table, JoinType.OUTER);
+		Join join = new Join(mCache, this, table, JoinType.OUTER);
 		mJoins.add(join);
 		return join;
 	}
 
 	public Join innerJoin(Class<? extends Model> table) {
-		Join join = new Join(this, table, JoinType.INNER);
+		Join join = new Join(mCache, this, table, JoinType.INNER);
 		mJoins.add(join);
 		return join;
 	}
 
 	public Join crossJoin(Class<? extends Model> table) {
-		Join join = new Join(this, table, JoinType.CROSS);
+		Join join = new Join(mCache, this, table, JoinType.CROSS);
 		mJoins.add(join);
 		return join;
 	}
@@ -166,7 +173,7 @@ public final class From implements Sqlable {
 
     private void addFrom(final StringBuilder sql) {
         sql.append("FROM ");
-        sql.append(Cache.getTableName(mType)).append(" ");
+        sql.append(mCache.getTableName(mType)).append(" ");
 
         if (mAlias != null) {
             sql.append("AS ");
@@ -295,11 +302,11 @@ public final class From implements Sqlable {
 
 	public <T extends Model> List<T> execute() {
 		if (mQueryBase instanceof Select) {
-			return SQLiteUtils.rawQuery(mType, toSql(), getArguments());
+			return SQLiteUtils.rawQuery(mCache,  mType, toSql(), getArguments());
 			
 		} else {
-			SQLiteUtils.execSql(toSql(), getArguments());
-			Cache.getContext().getContentResolver().notifyChange(ContentProvider.createUri(mType, null), null);
+			SQLiteUtils.execSql(mCache, toSql(), getArguments());
+            mCache.getContext().getContentResolver().notifyChange(ContentProvider.createUri(mType, null), null);
 			return null;
 			
 		}
@@ -308,11 +315,11 @@ public final class From implements Sqlable {
 	public <T extends Model> T executeSingle() {
 		if (mQueryBase instanceof Select) {
 			limit(1);
-			return (T) SQLiteUtils.rawQuerySingle(mType, toSql(), getArguments());
+			return (T) SQLiteUtils.rawQuerySingle(mCache, mType, toSql(), getArguments());
 			
 		} else {
 			limit(1);
-			SQLiteUtils.rawQuerySingle(mType, toSql(), getArguments()).delete();
+			SQLiteUtils.rawQuerySingle(mCache, mType, toSql(), getArguments()).delete();
 			return null;
 			
 		}
@@ -323,14 +330,14 @@ public final class From implements Sqlable {
      * @return <code>true</code> if the query returns at least one row; otherwise, <code>false</code>.
      */
     public boolean exists() {
-        return SQLiteUtils.intQuery(toExistsSql(), getArguments()) != 0;
+        return SQLiteUtils.intQuery(mCache, toExistsSql(), getArguments()) != 0;
     }
 
     /**
      * Gets the number of rows returned by the query.
      */
     public int count() {
-        return SQLiteUtils.intQuery(toCountSql(), getArguments());
+        return SQLiteUtils.intQuery(mCache, toCountSql(), getArguments());
     }
 
 	public String[] getArguments() {

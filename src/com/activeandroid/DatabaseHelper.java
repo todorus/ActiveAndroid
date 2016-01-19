@@ -49,16 +49,18 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
     // PRIVATE FIELDS
     //////////////////////////////////////////////////////////////////////////////////////
 
+	private final Cache cache;
     private final String mSqlParser;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// CONSTRUCTORS
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	public DatabaseHelper(Configuration configuration) {
+	public DatabaseHelper(Cache cache, Configuration configuration) {
 		super(configuration.getContext(), configuration.getDatabaseName(), null, configuration.getDatabaseVersion());
 		copyAttachedDatabase(configuration.getContext(), configuration.getDatabaseName());
 		mSqlParser = configuration.getSqlParser();
+		this.cache = cache;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +137,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 	private void executeCreateIndex(SQLiteDatabase db) {
 		db.beginTransaction();
 		try {
-			for (TableInfo tableInfo : Cache.getTableInfos()) {
+			for (TableInfo tableInfo : cache.getTableInfos()) {
 				String[] definitions = SQLiteUtils.createIndexDefinition(tableInfo);
 
 				for (String definition : definitions) {
@@ -152,8 +154,8 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 	private void executeCreate(SQLiteDatabase db) {
 		db.beginTransaction();
 		try {
-			for (TableInfo tableInfo : Cache.getTableInfos()) {
-				db.execSQL(SQLiteUtils.createTableDefinition(tableInfo));
+			for (TableInfo tableInfo : cache.getTableInfos()) {
+				db.execSQL(SQLiteUtils.createTableDefinition(cache, tableInfo));
 			}
 			db.setTransactionSuccessful();
 		}
@@ -165,7 +167,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 	private boolean executeMigrations(SQLiteDatabase db, int oldVersion, int newVersion) {
 		boolean migrationExecuted = false;
 		try {
-			final List<String> files = Arrays.asList(Cache.getContext().getAssets().list(MIGRATION_PATH));
+			final List<String> files = Arrays.asList(cache.getContext().getAssets().list(MIGRATION_PATH));
 			Collections.sort(files, new NaturalOrderComparator());
 
 			db.beginTransaction();
@@ -203,7 +205,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 	    InputStream stream = null;
 
 		try {
-		    stream = Cache.getContext().getAssets().open(MIGRATION_PATH + "/" + file);
+		    stream = cache.getContext().getAssets().open(MIGRATION_PATH + "/" + file);
 
 		    if (Configuration.SQL_PARSER_DELIMITED.equalsIgnoreCase(mSqlParser)) {
 		        executeDelimitedSqlScript(db, stream);

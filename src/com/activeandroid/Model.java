@@ -44,14 +44,21 @@ public abstract class Model {
 
 	private Long mId = null;
 
+	protected Cache mCache;
 	private final TableInfo mTableInfo;
 	private final String idName;
 	//////////////////////////////////////////////////////////////////////////////////////
 	// CONSTRUCTORS
 	//////////////////////////////////////////////////////////////////////////////////////
 
+	public Model(Cache cache) {
+		mCache = cache;
+		mTableInfo = getCache().getTableInfo(getClass());
+		idName = mTableInfo.getIdName();
+	}
+
 	public Model() {
-		mTableInfo = Cache.getTableInfo(getClass());
+		mTableInfo = getCache().getTableInfo(getClass());
 		idName = mTableInfo.getIdName();
 	}
 
@@ -64,19 +71,21 @@ public abstract class Model {
 	}
     public final void setId(Long id) {mId = id;}
 
-	public void delete() {
+	public int delete() {
         if(getId() == null)
-            return;
+            return 0;
 
-		Cache.openDatabase().delete(mTableInfo.getTableName(), idName+"=?", new String[] { getId().toString() });
-		Cache.removeEntity(this);
+		int deletions = getCache().openDatabase().delete(mTableInfo.getTableName(), idName+"=?", new String[] { getId().toString() });
+		getCache().removeEntity(this);
 
-		Cache.getContext().getContentResolver()
+		getCache().getContext().getContentResolver()
 				.notifyChange(ContentProvider.createUri(mTableInfo.getType(), mId), null);
+
+		return deletions;
 	}
 
 	public Long save() {
-		final SQLiteDatabase db = Cache.openDatabase();
+		final SQLiteDatabase db = getCache().openDatabase();
 		final ContentValues values = new ContentValues();
 
 		for (Field field : mTableInfo.getFields()) {
@@ -89,7 +98,7 @@ public abstract class Model {
 				Object value = field.get(this);
 
 				if (value != null) {
-					final TypeSerializer typeSerializer = Cache.getParserForType(fieldType);
+					final TypeSerializer typeSerializer = getCache().getParserForType(fieldType);
 					if (typeSerializer != null) {
 						// serialize data
 						value = typeSerializer.serialize(value);
@@ -162,7 +171,7 @@ public abstract class Model {
 			db.update(mTableInfo.getTableName(), values, idName+"=" + mId, null);
 		}
 
-		Cache.getContext().getContentResolver()
+		getCache().getContext().getContentResolver()
 				.notifyChange(ContentProvider.createUri(mTableInfo.getType(), mId), null);
 		return mId;
 	}
@@ -170,17 +179,29 @@ public abstract class Model {
 	// Convenience methods
 
 	public static void delete(Class<? extends Model> type, long id) {
-		TableInfo tableInfo = Cache.getTableInfo(type);
-		new Delete().from(type).where(tableInfo.getIdName()+"=?", id).execute();
+		delete(ActiveAndroid.getCache(), type, id);
+	}
+
+	public static void delete(Cache cache, Class<? extends Model> type, long id) {
+		TableInfo tableInfo = cache.getTableInfo(type);
+		new Delete(cache).from(type).where(tableInfo.getIdName() + "=?", id).execute();
 	}
 
 	public static <T extends Model> T load(Class<T> type, long id) {
-		TableInfo tableInfo = Cache.getTableInfo(type);
+		return load(ActiveAndroid.getCache(), type, id);
+	}
+
+	public static <T extends Model> T load(Cache cache, Class<T> type, long id) {
+		TableInfo tableInfo = cache.getTableInfo(type);
 		return (T) new Select().from(type).where(tableInfo.getIdName()+"=?", id).executeSingle();
 	}
 
-    public static void truncate(Class<? extends Model> type){
-        TableInfo tableInfo = Cache.getTableInfo(type);
+	public static void truncate(Class<? extends Model> type){
+		truncate(ActiveAndroid.getCache(), type);
+	}
+
+    public static void truncate(Cache cache, Class<? extends Model> type){
+        TableInfo tableInfo = cache.getTableInfo(type);
         // Not the cleanest way, but...
         ActiveAndroid.execSQL("delete from "+tableInfo.getTableName()+";");
         ActiveAndroid.execSQL("delete from sqlite_sequence where name='"+tableInfo.getTableName()+"';");
@@ -207,7 +228,7 @@ public abstract class Model {
 
 			try {
 				boolean columnIsNull = cursor.isNull(columnIndex);
-				TypeSerializer typeSerializer = Cache.getParserForType(fieldType);
+				TypeSerializer typeSerializer = getCache().getParserForType(fieldType);
 				Object value = null;
 
 				if (typeSerializer != null) {
@@ -253,7 +274,7 @@ public abstract class Model {
 					final long entityId = cursor.getLong(columnIndex);
 					final Class<? extends Model> entityType = (Class<? extends Model>) fieldType;
 
-					Model entity = Cache.getEntity(entityType, entityId);
+					Model entity = getCache().getEntity(entityType, entityId);
 					if (entity == null) {
 						entity = new Select().from(entityType).where(idName+"=?", entityId).executeSingle();
 					}
@@ -288,7 +309,7 @@ public abstract class Model {
 		}
 
 		if (mId != null) {
-			Cache.addEntity(this);
+			getCache().addEntity(this);
 		}
 	}
 
@@ -298,10 +319,22 @@ public abstract class Model {
 
 	protected final <T extends Model> List<T> getMany(Class<T> type, String foreignKey) {
         if(getId() != null){
-            return new Select().from(type).where(Cache.getTableName(type) + "." + foreignKey + "=?", getId()).execute();
+            return new Select().from(type).where(getCache().getTableName(type) + "." + foreignKey + "=?", getId()).execute();
         } else {
             return new ArrayList<T>();
         }
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// PRIVATE METHODS
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	public Cache getCache(){
+		if(mCache == null) {
+			return ActiveAndroid.getCache();
+		} else {
+			return mCache;
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -314,15 +347,15 @@ public abstract class Model {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Model && this.mId != null) {
-			final Model other = (Model) obj;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
-			return this.mId.equals(other.mId)							
-							&& (this.mTableInfo.getTableName().equals(other.mTableInfo.getTableName()));
-		} else {
-			return this == obj;
-		}
+		Model model = (Model) o;
+
+		if (mId != null ? !mId.equals(model.mId) : model.mId != null) return false;
+		return mTableInfo.getTableName().equals(model.mTableInfo.getTableName());
+
 	}
 
 	@Override
