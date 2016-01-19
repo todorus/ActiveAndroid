@@ -18,17 +18,30 @@ package com.activeandroid.query;
 
 import android.text.TextUtils;
 
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Cache;
 import com.activeandroid.Model;
 
 public final class Select implements Sqlable {
+	private Cache mCache;
 	private String[] mColumns;
 	private boolean mDistinct = false;
 	private boolean mAll = false;
 
 	public Select() {
+		this(ActiveAndroid.getCache());
 	}
 
-	public Select(String... columns) {
+	public Select(String... columns){
+		this(ActiveAndroid.getCache(), columns);
+	}
+
+	public Select(Cache cache) {
+		mCache = cache;
+	}
+
+	public Select(Cache cache, String... columns) {
+        this(cache);
 		mColumns = columns;
 	}
 
@@ -55,7 +68,7 @@ public final class Select implements Sqlable {
 	}
 
 	public From from(Class<? extends Model> table) {
-		return new From(table, this);
+		return new From(mCache, table, this);
 	}
 
 	public static class Column {

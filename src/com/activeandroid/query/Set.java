@@ -16,6 +16,8 @@ package com.activeandroid.query;
  * limitations under the License.
  */
 
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Cache;
 import com.activeandroid.util.SQLiteUtils;
 
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.List;
 public final class Set implements Sqlable {
 	private Update mUpdate;
 
+	private Cache mCache;
 	private String mSet;
 	private String mWhere;
 
@@ -32,6 +35,11 @@ public final class Set implements Sqlable {
 	private List<Object> mWhereArguments;
 
 	public Set(Update queryBase, String set) {
+		this(ActiveAndroid.getCache(), queryBase, set);
+	}
+
+	public Set(Cache cache, Update queryBase, String set) {
+		mCache = cache;
 		mUpdate = queryBase;
 		mSet = set;
 
@@ -39,12 +47,8 @@ public final class Set implements Sqlable {
 		mWhereArguments = new ArrayList<Object>();
 	}
 
-	public Set(Update queryBase, String set, Object... args) {
-		mUpdate = queryBase;
-		mSet = set;
-
-		mSetArguments = new ArrayList<Object>();
-		mWhereArguments = new ArrayList<Object>();
+	public Set(Cache cache, Update queryBase, String set, Object... args) {
+		this(cache, queryBase, set);
 
 		mSetArguments.addAll(Arrays.asList(args));
 	}
@@ -82,7 +86,7 @@ public final class Set implements Sqlable {
 	}
 
 	public void execute() {
-		SQLiteUtils.execSql(toSql(), getArguments());
+		SQLiteUtils.execSql(mCache, toSql(), getArguments());
 	}
 
 	public String[] getArguments() {

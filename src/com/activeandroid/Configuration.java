@@ -128,6 +128,17 @@ public class Configuration {
 			mCacheSize = DEFAULT_CACHE_SIZE;
 		}
 
+		public Builder(Context context, Configuration seed){
+			this(context);
+
+			mDatabaseName = seed.mDatabaseName;
+			mDatabaseVersion = seed.mDatabaseVersion;
+			mSqlParser = seed.mSqlParser;
+			mModelClasses = seed.mModelClasses;
+			mTypeSerializers = seed.mTypeSerializers;
+			mCacheSize = seed.mCacheSize;
+		}
+
 		//////////////////////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		//////////////////////////////////////////////////////////////////////////////////////
