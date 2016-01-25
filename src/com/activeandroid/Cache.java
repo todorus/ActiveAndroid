@@ -41,8 +41,6 @@ public final class Cache {
 	private ModelInfo sModelInfo;
 	private DatabaseHelper sDatabaseHelper;
 
-	private LruCache<String, Model> sEntities;
-
 	private boolean sIsInitialized = false;
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -59,12 +57,6 @@ public final class Cache {
 		sModelInfo = new ModelInfo(configuration);
 		sDatabaseHelper = new DatabaseHelper(this, configuration);
 
-		// TODO: It would be nice to override sizeOf here and calculate the memory
-		// actually used, however at this point it seems like the reflection
-		// required would be too costly to be of any benefit. We'll just set a max
-		// object size instead.
-		sEntities = new LruCache<String, Model>(configuration.getCacheSize());
-
 		openDatabase();
 
 		sIsInitialized = true;
@@ -73,14 +65,12 @@ public final class Cache {
 	}
 
 	public synchronized void clear() {
-		sEntities.evictAll();
 		Log.v("Cache cleared.");
 	}
 
 	public synchronized void dispose() {
 		closeDatabase();
 
-		sEntities = null;
 		sModelInfo = null;
 		sDatabaseHelper = null;
 
@@ -119,17 +109,15 @@ public final class Cache {
 		return getIdentifier(entity.getClass(), entity.getId());
 	}
 
-	public synchronized void addEntity(Model entity) {
-		sEntities.put(getIdentifier(entity), entity);
-	}
-
-	public synchronized Model getEntity(Class<? extends Model> type, long id) {
-		return sEntities.get(getIdentifier(type, id));
-	}
-
-	public synchronized void removeEntity(Model entity) {
-		sEntities.remove(getIdentifier(entity));
-	}
+//	public synchronized void addEntity(Model entity) {
+//	}
+//
+//	public synchronized Model getEntity(Class<? extends Model> type, long id) {
+//		return null;
+//	}
+//
+//	public synchronized void removeEntity(Model entity) {
+//	}
 
 	// Model cache
 
